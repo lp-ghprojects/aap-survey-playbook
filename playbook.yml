@@ -1,0 +1,24 @@
+---
+- name: Show survey variables from Red Hat Self-Service Portal
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Print all collected survey variables
+      ansible.builtin.debug:
+        msg:
+          CCSD: "{{ CCSD | default('not provided') }}"
+          device_id: "{{ device_id | default('not provided') }}"
+          action_type: "{{ action_type | default('not provided') }}"
+          vpn_type: "{{ vpn_type | default('not provided') }}"
+          interface: "{{ interface | default('not provided') }}"
+
+    - name: Print variables one per line
+      ansible.builtin.debug:
+        msg: |
+          CCSD={{ CCSD | default('not provided') }}
+          device_id={{ device_id | default('not provided') }}
+          action_type={{ action_type | default('not provided') }}
+          vpn_type={{ vpn_type | default('not provided') }}
+          interface={{ interface | default('not provided') }}
