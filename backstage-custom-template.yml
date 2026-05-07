@@ -22,11 +22,7 @@ spec:
         token:
           title: AAP Token
           type: string
-          description: OAuth2 token for Ansible Automation Platform authentication
-          ui:field: AAPTokenField
-          ui:backstage:
-            review:
-              show: false
+          description: Paste a valid AAP OAuth2 token for testing
 
     - title: Device & action details
       required:
@@ -38,17 +34,14 @@ spec:
         CCSD:
           title: CCSD
           type: string
-          description: Customer circuit service descriptor
 
         device_id:
           title: Device ID
           type: string
-          description: Target device identifier
 
         action_type:
           title: Action type
           type: string
-          description: Select the operation to perform
           enum:
             - start
             - change
@@ -61,7 +54,6 @@ spec:
         interface:
           title: Interface
           type: string
-          description: Network interface name, for example GigabitEthernet0/1
 
     - title: VPN configuration
       required:
@@ -70,7 +62,6 @@ spec:
         vpn_type:
           title: VPN type
           type: string
-          description: Select VPN type
           enum:
             - regular
             - special
@@ -88,7 +79,6 @@ spec:
                 protocol_type:
                   title: Protocol type
                   type: string
-                  description: Select the protocol type
                   enum:
                     - bgp
                     - static
@@ -108,7 +98,6 @@ spec:
                 vpn_id:
                   title: VPN ID
                   type: string
-                  description: Enter the special VPN identifier
                   minLength: 1
               required:
                 - vpn_id
@@ -139,6 +128,3 @@ spec:
           **Device:** ${{ parameters.device_id }}
           **Action:** ${{ parameters.action_type }}
           ${{ '**Protocol:** ' + parameters.protocol_type if parameters.vpn_type == 'regular' else '**VPN ID:** ' + parameters.vpn_id }}
-    links:
-      - title: View job in AAP
-        url: ${{ steps['launch-vpn-job'].output.data.url }}
