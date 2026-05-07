@@ -1,9 +1,4 @@
 ---
-# display_vpn_survey.yml
-# Dynamic VPN survey — vpn_type drives conditional fields:
-#   regular  →  protocol_type (ikev1 / ikev2 / ssl)
-#   special  →  vpn_id (text)
-
 - name: Show survey variables from Red Hat Self-Service Portal
   hosts: localhost
   connection: local
@@ -41,17 +36,17 @@
           protocol_type={{ protocol_type }}
           vpn_id={{ vpn_id }}
 
-    - name: Show protocol_type (regular VPN only)
+    - name: Show protocol_type for regular VPNs
       ansible.builtin.debug:
         msg: "Regular VPN selected — protocol_type is: {{ protocol_type }}"
       when: vpn_type == "regular"
 
-    - name: Show vpn_id (special VPN only)
+    - name: Show vpn_id for special VPNs
       ansible.builtin.debug:
         msg: "Special VPN selected — vpn_id is: {{ vpn_id }}"
       when: vpn_type == "special"
 
-    - name: Warn if vpn_type is unrecognised
+    - name: Warn if vpn_type is unrecognized
       ansible.builtin.debug:
         msg: "WARNING: vpn_type '{{ vpn_type }}' is not regular or special."
       when: vpn_type not in ['regular', 'special']
