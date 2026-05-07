@@ -3,8 +3,10 @@ kind: Template
 
 metadata:
   name: vpn-survey-dynamic
-  title: VPN configuration — dynamic form
-  description: Collect VPN parameters and launch an AAP job template.
+  title: "VPN configuration — dynamic form"
+  description: >
+    Collects VPN parameters. Selecting 'regular' reveals protocol_type;
+    selecting 'special' reveals vpn_id.
   tags:
     - ansible
     - vpn
@@ -15,20 +17,21 @@ spec:
   type: service
 
   parameters:
+
+    # ── Step 1: Authentication token (hidden, auto-injected) ───────────────────
     - title: Authentication
-      required:
-        - token
       properties:
         token:
           title: AAP Token
           type: string
-          description: Token used by SSP to launch the AAP job template
           ui:field: AAPTokenField
+          ui:widget: hidden
           ui:backstage:
             review:
               show: false
 
-    - title: Device and action details
+    # ── Step 2: Base parameters (always shown) ─────────────────────────────────
+    - title: "Device & action details"
       required:
         - CCSD
         - device_id
@@ -36,48 +39,50 @@ spec:
         - interface
       properties:
         CCSD:
-          title: CCSD
+          title: "CCSD"
           type: string
-          description: Customer circuit service descriptor
+          description: "Customer circuit service descriptor"
 
         device_id:
-          title: Device ID
+          title: "Device ID"
           type: string
-          description: Target device identifier
+          description: "Target device identifier"
 
         action_type:
-          title: Action type
+          title: "Action type"
           type: string
-          description: Select the operation to perform
+          description: "Select the operation to perform"
           enum:
-            - start
-            - change
-            - discontinue
+            - add
+            - remove
+            - modify
           enumNames:
-            - Start
-            - Change
-            - Discontinue
+            - "Add"
+            - "Remove"
+            - "Modify"
 
         interface:
-          title: Interface
+          title: "Interface"
           type: string
-          description: Network interface name, for example GigabitEthernet0/1
+          description: "Network interface name (e.g. GigabitEthernet0/1)"
 
-    - title: VPN configuration
+    # ── Step 3: VPN type + conditional fields ─────────────────────────────────
+    - title: "VPN configuration"
       required:
         - vpn_type
       properties:
         vpn_type:
-          title: VPN type
+          title: "VPN type"
           type: string
-          description: Select VPN type
+          description: "Select VPN type — this controls the next field"
           enum:
             - regular
             - special
           enumNames:
-            - Regular
-            - Special
+            - "Regular"
+            - "Special"
 
+      # ── Conditional: vpn_type = regular → show protocol_type ──────────────
       dependencies:
         vpn_type:
           oneOf:
@@ -86,63 +91,63 @@ spec:
                   enum:
                     - regular
                 protocol_type:
-                  title: Protocol type
+                  title: "Protocol type"
                   type: string
-                  description: Select the protocol type
+                  description: "Select the VPN protocol"
                   enum:
-                    - bgp
-                    - static
-                    - none
+                    - ikev1
+                    - ikev2
+                    - ssl
                   enumNames:
-                    - BGP
-                    - Static
-                    - None
-                  default: none
+                    - "IKEv1"
+                    - "IKEv2"
+                    - "SSL/TLS"
+                  default: ikev1
               required:
                 - protocol_type
 
+            # ── Conditional: vpn_type = special → show vpn_id ───────────────
             - properties:
                 vpn_type:
                   enum:
                     - special
                 vpn_id:
-                  title: VPN ID
+                  title: "VPN ID"
                   type: string
-                  description: Enter the special VPN identifier
+                  description: "Enter the special VPN identifier"
                   minLength: 1
               required:
                 - vpn_id
 
   steps:
     - id: launch-vpn-job
-      name: Launch VPN playbook in AAP
+      name: "Launch VPN playbook on localhost"
       action: rhaap:launch-job-template
       input:
         token: ${{ parameters.token }}
         values:
-          template: Survey Demo — Display VPN Input
-          jobType: run
-          verbosity: Normal
-          timeout: 300
+          template: "Survey Demo — Display VPN Input"
           extraVariables:
             CCSD: ${{ parameters.CCSD }}
             device_id: ${{ parameters.device_id }}
             action_type: ${{ parameters.action_type }}
             interface: ${{ parameters.interface }}
             vpn_type: ${{ parameters.vpn_type }}
+            # Only one of these will carry a value; the other is empty string
             protocol_type: ${{ parameters.protocol_type if parameters.vpn_type == 'regular' else '' }}
             vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'special' else '' }}
+          jobType: run
+          verbosity: Normal
+          timeout: 300
 
   output:
     text:
-      - title: Submission summary
+      - title: "Submission summary"
         content: |
-          **CCSD:** ${{ parameters.CCSD }}
+          **VPN type:** ${{ parameters.vpn_type }}
           **Device:** ${{ parameters.device_id }}
           **Action:** ${{ parameters.action_type }}
-          **Interface:** ${{ parameters.interface }}
-          **VPN type:** ${{ parameters.vpn_type }}
           ${{ '**Protocol:** ' + parameters.protocol_type if parameters.vpn_type == 'regular' else '**VPN ID:** ' + parameters.vpn_id }}
     links:
-      - title: View job in AAP
-        url: ${{ steps['launch-vpn-job'].output.data.url }}
+      - title: "View job in AAP"
+        url: ${{ steps['launch-vpn-job'].output.jobUrl }}
