@@ -1,24 +1,57 @@
 ---
+# display_vpn_survey.yml
+# Dynamic VPN survey — vpn_type drives conditional fields:
+#   regular  →  protocol_type (ikev1 / ikev2 / ssl)
+#   special  →  vpn_id (text)
+
 - name: Show survey variables from Red Hat Self-Service Portal
   hosts: localhost
   connection: local
   gather_facts: false
 
+  vars:
+    CCSD: "{{ CCSD | default('not provided') }}"
+    device_id: "{{ device_id | default('not provided') }}"
+    action_type: "{{ action_type | default('not provided') }}"
+    vpn_type: "{{ vpn_type | default('not provided') }}"
+    interface: "{{ interface | default('not provided') }}"
+    protocol_type: "{{ protocol_type | default('not provided') }}"
+    vpn_id: "{{ vpn_id | default('not provided') }}"
+
   tasks:
     - name: Print all collected survey variables
       ansible.builtin.debug:
         msg:
-          CCSD: "{{ CCSD | default('not provided') }}"
-          device_id: "{{ device_id | default('not provided') }}"
-          action_type: "{{ action_type | default('not provided') }}"
-          vpn_type: "{{ vpn_type | default('not provided') }}"
-          interface: "{{ interface | default('not provided') }}"
+          CCSD: "{{ CCSD }}"
+          device_id: "{{ device_id }}"
+          action_type: "{{ action_type }}"
+          vpn_type: "{{ vpn_type }}"
+          interface: "{{ interface }}"
+          protocol_type: "{{ protocol_type }}"
+          vpn_id: "{{ vpn_id }}"
 
     - name: Print variables one per line
       ansible.builtin.debug:
         msg: |
-          CCSD={{ CCSD | default('not provided') }}
-          device_id={{ device_id | default('not provided') }}
-          action_type={{ action_type | default('not provided') }}
-          vpn_type={{ vpn_type | default('not provided') }}
-          interface={{ interface | default('not provided') }}
+          CCSD={{ CCSD }}
+          device_id={{ device_id }}
+          action_type={{ action_type }}
+          vpn_type={{ vpn_type }}
+          interface={{ interface }}
+          protocol_type={{ protocol_type }}
+          vpn_id={{ vpn_id }}
+
+    - name: Show protocol_type (regular VPN only)
+      ansible.builtin.debug:
+        msg: "Regular VPN selected — protocol_type is: {{ protocol_type }}"
+      when: vpn_type == "regular"
+
+    - name: Show vpn_id (special VPN only)
+      ansible.builtin.debug:
+        msg: "Special VPN selected — vpn_id is: {{ vpn_id }}"
+      when: vpn_type == "special"
+
+    - name: Warn if vpn_type is unrecognised
+      ansible.builtin.debug:
+        msg: "WARNING: vpn_type '{{ vpn_type }}' is not regular or special."
+      when: vpn_type not in ['regular', 'special']
