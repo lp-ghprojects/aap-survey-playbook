@@ -17,8 +17,7 @@ spec:
   type: service
 
   parameters:
-
-    # ── Step 1: Authentication token (hidden, auto-injected) ───────────────────
+    # Step 1: Authentication token (hidden, auto-injected)
     - title: Authentication
       properties:
         token:
@@ -30,7 +29,7 @@ spec:
             review:
               show: false
 
-    # ── Step 2: Base parameters (always shown) ─────────────────────────────────
+    # Step 2: Base parameters (always shown)
     - title: "Device & action details"
       required:
         - CCSD
@@ -53,20 +52,20 @@ spec:
           type: string
           description: "Select the operation to perform"
           enum:
-            - add
-            - remove
-            - modify
+            - start
+            - change
+            - discontinue
           enumNames:
-            - "Add"
-            - "Remove"
-            - "Modify"
+            - "Start"
+            - "Change"
+            - "Discontinue"
 
         interface:
           title: "Interface"
           type: string
           description: "Network interface name (e.g. GigabitEthernet0/1)"
 
-    # ── Step 3: VPN type + conditional fields ─────────────────────────────────
+    # Step 3: VPN type + conditional fields
     - title: "VPN configuration"
       required:
         - vpn_type
@@ -82,7 +81,6 @@ spec:
             - "Regular"
             - "Special"
 
-      # ── Conditional: vpn_type = regular → show protocol_type ──────────────
       dependencies:
         vpn_type:
           oneOf:
@@ -95,18 +93,17 @@ spec:
                   type: string
                   description: "Select the VPN protocol"
                   enum:
-                    - ikev1
-                    - ikev2
-                    - ssl
+                    - bgp
+                    - static
+                    - none
                   enumNames:
-                    - "IKEv1"
-                    - "IKEv2"
-                    - "SSL/TLS"
-                  default: ikev1
+                    - "BGP"
+                    - "Static"
+                    - "None"
+                  default: bgp
               required:
                 - protocol_type
 
-            # ── Conditional: vpn_type = special → show vpn_id ───────────────
             - properties:
                 vpn_type:
                   enum:
@@ -124,7 +121,8 @@ spec:
       name: "Launch VPN playbook on localhost"
       action: rhaap:launch-job-template
       input:
-        token: ${{ parameters.token }}
+        instance:
+          token: ${{ parameters.token }}
         values:
           template: "Survey Demo — Display VPN Input"
           extraVariables:
@@ -133,7 +131,6 @@ spec:
             action_type: ${{ parameters.action_type }}
             interface: ${{ parameters.interface }}
             vpn_type: ${{ parameters.vpn_type }}
-            # Only one of these will carry a value; the other is empty string
             protocol_type: ${{ parameters.protocol_type if parameters.vpn_type == 'regular' else '' }}
             vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'special' else '' }}
           jobType: run
