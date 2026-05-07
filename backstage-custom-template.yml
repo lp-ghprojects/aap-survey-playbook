@@ -22,6 +22,7 @@ spec:
         token:
           title: AAP Token
           type: string
+          description: OAuth2 token for Ansible Automation Platform authentication
           ui:field: AAPTokenField
           ui:backstage:
             review:
@@ -121,8 +122,6 @@ spec:
         values:
           template: Survey Demo — Display VPN Input
           jobType: run
-          verbosity: Normal
-          timeout: 300
           extraVariables:
             CCSD: ${{ parameters.CCSD }}
             device_id: ${{ parameters.device_id }}
@@ -140,3 +139,6 @@ spec:
           **Device:** ${{ parameters.device_id }}
           **Action:** ${{ parameters.action_type }}
           ${{ '**Protocol:** ' + parameters.protocol_type if parameters.vpn_type == 'regular' else '**VPN ID:** ' + parameters.vpn_id }}
+    links:
+      - title: View job in AAP
+        url: ${{ steps['launch-vpn-job'].output.data.url }}
