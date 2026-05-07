@@ -22,9 +22,7 @@ spec:
         token:
           title: AAP Token
           type: string
-          description: OAuth2 token for Ansible Automation Platform authentication
           ui:field: AAPTokenField
-          ui:widget: hidden
           ui:backstage:
             review:
               show: false
