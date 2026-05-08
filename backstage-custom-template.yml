@@ -26,7 +26,6 @@ spec:
           type: string
           description: Oauth2 token for job execution
           ui:field: AAPTokenField
-          ui:widget: hidden  # Hides the field
           ui:backstage:
             review:
               show: false    # Prevents token exposure
