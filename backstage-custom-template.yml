@@ -18,9 +18,9 @@ spec:
   parameters:
     # Step 1: Manual token entry
     - title: Authentication
+      required:
+        - token 
       properties:
-        required:
-          - token 
         token:
           title: AAP Authentication Token
           type: string
