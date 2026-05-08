@@ -17,14 +17,6 @@ spec:
 
   parameters:
     # Step 1: Manual token entry
-    - title: Authentication
-      required:
-        - token
-      properties:
-        token:
-          title: AAP Token
-          type: string
-          description: "Paste your AAP OAuth token"
 
     # Step 2: Base parameters
     - title: "Device & action details"
@@ -114,13 +106,9 @@ spec:
     - id: launch-vpn-job
       name: "Launch VPN playbook on localhost"
       action: rhaap:launch-job-template
-
       input:
-        token: ${{ parameters.token }}
-
         values:
           template: "Survey Demo — Display VPN Input"
-
           extraVariables:
             CCSD: ${{ parameters.CCSD }}
             device_id: ${{ parameters.device_id }}
