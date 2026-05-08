@@ -17,18 +17,6 @@ spec:
 
   parameters:
     # Step 1: Manual token entry
-    - title: Authentication
-      required:
-        - token 
-      properties:
-        token:
-          title: AAP Authentication Token
-          type: string
-          description: Oauth2 token for job execution
-          ui:field: AAPTokenField
-          ui:backstage:
-            review:
-              show: false    # Prevents token exposure
 
     # Step 2: Base parameters
     - title: "Device & action details"
@@ -119,14 +107,15 @@ spec:
       name: "Launch VPN playbook on localhost"
       action: rhaap:launch-job-template
       input:
-        token: ${{ parameters.token }}
+        token: ${{ secrets.aapToken }}
         values:
-          template: "Survey Demo — Display VPN Input"       
-          CCSD: ${{ parameters.CCSD }}
-          device_id: ${{ parameters.device_id }}
-          action_type: ${{ parameters.action_type }}
-          interface: ${{ parameters.interface }}
-          vpn_type: ${{ parameters.vpn_type }}
+          template: "Survey Demo — Display VPN Input"
+          extraVariables:
+            CCSD: ${{ parameters.CCSD }}
+            device_id: ${{ parameters.device_id }}
+            action_type: ${{ parameters.action_type }}
+            interface: ${{ parameters.interface }}
+            vpn_type: ${{ parameters.vpn_type }}
 
             protocol_type: >-
               ${{ parameters.protocol_type
