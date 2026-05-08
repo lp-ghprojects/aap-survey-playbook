@@ -3,7 +3,7 @@ kind: Template
 
 metadata:
   name: vpn-survey-manual-token
-  title: "VPN configuration dynamic form (manual token)"
+  title: "VPN configuration dynamic form"
   description: >
     Test version that allows manual entry of the AAP token.
   tags:
