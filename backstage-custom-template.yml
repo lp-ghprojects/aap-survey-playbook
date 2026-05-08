@@ -2,10 +2,11 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 
 metadata:
-  name: vpn-survey-manual-token
-  title: "VPN configuration dynamic form"
+  name: vpn-survey-dynamic
+  title: "VPN configuration — dynamic form"
   description: >
-    Test version that allows manual entry of the AAP token.
+    Collects VPN parameters. Selecting 'regular' reveals protocol_type;
+    selecting 'special' reveals vpn_id.
   tags:
     - ansible
     - vpn
@@ -16,9 +17,10 @@ spec:
   type: service
 
   parameters:
-    # Step 1: Manual token entry
 
-    # Step 2: Base parameters
+    # ── Step 1: Authentication token (hidden, auto-injected) ───────────────────
+   
+    # ── Step 2: Base parameters (always shown) ─────────────────────────────────
     - title: "Device & action details"
       required:
         - CCSD
@@ -29,28 +31,32 @@ spec:
         CCSD:
           title: "CCSD"
           type: string
+          description: "Customer circuit service descriptor"
 
         device_id:
           title: "Device ID"
           type: string
+          description: "Target device identifier"
 
         action_type:
           title: "Action type"
           type: string
+          description: "Select the operation to perform"
           enum:
-            - start
-            - change
-            - discontinue
+            - add
+            - remove
+            - modify
           enumNames:
-            - "Start"
-            - "Change"
-            - "Discontinue"
+            - "Add"
+            - "Remove"
+            - "Modify"
 
         interface:
           title: "Interface"
           type: string
+          description: "Network interface name (e.g. GigabitEthernet0/1)"
 
-    # Step 3: VPN configuration
+    # ── Step 3: VPN type + conditional fields ─────────────────────────────────
     - title: "VPN configuration"
       required:
         - vpn_type
@@ -58,6 +64,7 @@ spec:
         vpn_type:
           title: "VPN type"
           type: string
+          description: "Select VPN type — this controls the next field"
           enum:
             - regular
             - special
@@ -65,6 +72,7 @@ spec:
             - "Regular"
             - "Special"
 
+      # ── Conditional: vpn_type = regular → show protocol_type ──────────────
       dependencies:
         vpn_type:
           oneOf:
@@ -72,33 +80,32 @@ spec:
                 vpn_type:
                   enum:
                     - regular
-
                 protocol_type:
                   title: "Protocol type"
                   type: string
+                  description: "Select the VPN protocol"
                   enum:
-                    - bgp
-                    - static
-                    - none
+                    - ikev1
+                    - ikev2
+                    - ssl
                   enumNames:
-                    - "BGP"
-                    - "Static"
-                    - "None"
-                  default: bgp
-
+                    - "IKEv1"
+                    - "IKEv2"
+                    - "SSL/TLS"
+                  default: ikev1
               required:
                 - protocol_type
 
+            # ── Conditional: vpn_type = special → show vpn_id ───────────────
             - properties:
                 vpn_type:
                   enum:
                     - special
-
                 vpn_id:
                   title: "VPN ID"
                   type: string
+                  description: "Enter the special VPN identifier"
                   minLength: 1
-
               required:
                 - vpn_id
 
@@ -116,27 +123,21 @@ spec:
             action_type: ${{ parameters.action_type }}
             interface: ${{ parameters.interface }}
             vpn_type: ${{ parameters.vpn_type }}
-
-            protocol_type: >-
-              ${{ parameters.protocol_type
-                  if parameters.vpn_type == 'regular'
-                  else '' }}
-
-            vpn_id: >-
-              ${{ parameters.vpn_id
-                  if parameters.vpn_type == 'special'
-                  else '' }}
-
+            # Only one of these will carry a value; the other is empty string
+            protocol_type: ${{ parameters.protocol_type if parameters.vpn_type == 'regular' else '' }}
+            vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'special' else '' }}
           jobType: run
+          verbosity: Normal
+          timeout: 300
 
   output:
     text:
       - title: "Submission summary"
         content: |
-          VPN type: ${{ parameters.vpn_type }}
-          Device: ${{ parameters.device_id }}
-          Action: ${{ parameters.action_type }}
-
+          **VPN type:** ${{ parameters.vpn_type }}
+          **Device:** ${{ parameters.device_id }}
+          **Action:** ${{ parameters.action_type }}
+          ${{ '**Protocol:** ' + parameters.protocol_type if parameters.vpn_type == 'regular' else '**VPN ID:** ' + parameters.vpn_id }}
     links:
       - title: "View job in AAP"
-        url: ${{ steps['launch-vpn-job'].output.data.url }}
+        url: ${{ steps['launch-vpn-job'].output.jobUrl }}
