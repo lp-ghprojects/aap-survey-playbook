@@ -25,7 +25,6 @@ spec:
           title: AAP Token
           type: string
           description: "Paste your AAP OAuth token"
-          ui:widget: password
 
     # Step 2: Base parameters
     - title: "Device & action details"
