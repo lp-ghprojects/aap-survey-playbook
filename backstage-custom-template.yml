@@ -121,8 +121,7 @@ spec:
       name: "Launch VPN playbook on localhost"
       action: rhaap:launch-job-template
       input:
-        instance:
-          token: ${{ parameters.token }}
+        token: ${{ parameters.token }}
         values:
           template: "Survey Demo — Display VPN Input"
           extraVariables:
