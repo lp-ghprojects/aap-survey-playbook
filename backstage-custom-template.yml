@@ -321,7 +321,7 @@ spec:
             action_type: ${{ parameters.action_type }}
             interface: ${{ parameters.interface }}
             vpn_type: ${{ parameters.vpn_type }}
-            service_protocol: ${{ parameters.service_protocol }}
+            service_protocol: ${{ [parameters.protocol_type] if parameters.vpn_type == 'regular' else [] }}
             pe_ip_address: ${{ parameters.pe_ip_address }}
             mtu_type: ${{ parameters.mtu_type if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
             mtu_value: ${{ parameters.mtu_value if parameters.vpn_type in ['pisp', 'coi', 'regular'] and parameters.mtu_type == 'other' else '' }}
