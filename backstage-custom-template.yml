@@ -107,7 +107,7 @@ spec:
       input:
         token: ${{ secrets.aapToken }}
         values:
-          template: Survey Demo — Display VPN Input
+          template: AAP-SSP Demo Template
           jobType: run
           timeout: 300
           extraVariables:
