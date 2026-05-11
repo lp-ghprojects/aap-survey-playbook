@@ -116,7 +116,7 @@ spec:
             action_type: ${{ parameters.action_type }}
             interface: ${{ parameters.interface }}
             vpn_type: ${{ parameters.vpn_type }}
-            protocol_type: ${{ parameters.protocol_type if parameters.vpn_type == 'regular' else '' }}
+            protocol_type: ${{ [parameters.protocol_type] if parameters.vpn_type == 'regular' else [] }}
             vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'special' else '' }}
 
   output:
