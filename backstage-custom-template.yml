@@ -109,7 +109,6 @@ spec:
         values:
           template: Survey Demo — Display VPN Input
           jobType: run
-          verbosity: Normal
           timeout: 300
           extraVariables:
             CCSD: ${{ parameters.CCSD }}
