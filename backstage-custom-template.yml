@@ -3,7 +3,7 @@ kind: Template
 
 metadata:
   name: vpn-survey-dynamic
-  title: VPN configuration — dynamic form
+  title: VPN configuration dynamic form
   description: Collects VPN parameters and launches an AAP job template.
   tags:
     - ansible
