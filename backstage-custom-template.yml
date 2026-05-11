@@ -324,7 +324,7 @@ spec:
             protocol_type: ${{ parameters.protocol_type }}
             pe_ip_address: ${{ parameters.pe_ip_address }}
             mtu_type: ${{ parameters.mtu_type if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
-            mtu_value: ${{ 100 if parameters.mtu_type == 'default' else 200 if parameters.mtu_type == 'jumbo' else parameters.mtu_value if parameters.mtu_type == 'other' else '' }}
+            mtu_value: ${{ parameters.mtu_value if parameters.vpn_type in ['pisp', 'coi', 'regular'] and parameters.mtu_type == 'other' else '' }}
             vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'regular' else '' }}
 
   output:
@@ -337,6 +337,6 @@ spec:
           **Service protocol:** ${{ parameters.protocol_type }}
           **PE IP:** ${{ parameters.pe_ip_address }}
           **Interface:** ${{ parameters.interface }}
-          **MTU type:** ${{ parameters.mtu_type }}
-          **MTU value:** ${{ 100 if parameters.mtu_type == 'default' else 200 if parameters.mtu_type == 'jumbo' else parameters.mtu_value if parameters.mtu_type == 'other' else '' }}
+          ${{ parameters.mtu_type ? '**MTU type:** ' + parameters.mtu_type : '' }}
+          ${{ parameters.mtu_value ? '**MTU value:** ' + parameters.mtu_value : '' }}
           ${{ parameters.vpn_id ? '**VPN ID:** ' + parameters.vpn_id : '' }}
