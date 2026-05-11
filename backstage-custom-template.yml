@@ -83,7 +83,7 @@ spec:
                   enum:
                     - niprvrf
 
-                service_protocol:
+                protocol_type:
                   title: "Service protocol"
                   type: string
                   description: "Select the service protocol"
@@ -103,7 +103,7 @@ spec:
                   description: "Provider edge IP address"
 
               required:
-                - service_protocol
+                - protocol_type
                 - pe_ip_address
 
             # ── vpn_type = p ───────────────────────────────────────────────────
@@ -126,7 +126,7 @@ spec:
                     - "Other"
                   default: default
 
-                service_protocol:
+                protocol_type:
                   title: "Service protocol"
                   type: string
                   description: "Select the service protocol"
@@ -147,7 +147,7 @@ spec:
 
               required:
                 - mtu_type
-                - service_protocol
+                - protocol_type
                 - pe_ip_address
 
               dependencies:
@@ -190,7 +190,7 @@ spec:
                     - "Other"
                   default: default
 
-                service_protocol:
+                protocol_type:
                   title: "Service protocol"
                   type: string
                   description: "Select the service protocol"
@@ -211,7 +211,7 @@ spec:
 
               required:
                 - mtu_type
-                - service_protocol
+                - protocol_type
                 - pe_ip_address
 
               dependencies:
@@ -260,7 +260,7 @@ spec:
                     - "Other"
                   default: default
 
-                service_protocol:
+                protocol_type:
                   title: "Service protocol"
                   type: string
                   description: "Select the service protocol"
@@ -282,7 +282,7 @@ spec:
               required:
                 - vpn_id
                 - mtu_type
-                - service_protocol
+                - protocol_type
                 - pe_ip_address
 
               dependencies:
@@ -321,10 +321,10 @@ spec:
             action_type: ${{ parameters.action_type }}
             interface: ${{ parameters.interface }}
             vpn_type: ${{ parameters.vpn_type }}
-            service_protocol: ${{ [parameters.service_protocol] if parameters.vpn_type == 'regular' else [] }}
+            protocol_type: ${{ parameters.protocol_type }}
             pe_ip_address: ${{ parameters.pe_ip_address }}
             mtu_type: ${{ parameters.mtu_type if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
-            mtu_value: ${{ parameters.mtu_value if parameters.vpn_type in ['pisp', 'coi', 'regular'] and parameters.mtu_type == 'other' else '' }}
+            mtu_value: ${{ 100 if parameters.mtu_type == 'default' else 200 if parameters.mtu_type == 'jumbo' else parameters.mtu_value if parameters.mtu_type == 'other' else '' }}
             vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'regular' else '' }}
 
   output:
@@ -334,9 +334,9 @@ spec:
           **VPN type:** ${{ parameters.vpn_type }}
           **Device:** ${{ parameters.device_id }}
           **Action:** ${{ parameters.action_type }}
-          **Service protocol:** ${{ parameters.service_protocol }}
+          **Service protocol:** ${{ parameters.protocol_type }}
           **PE IP:** ${{ parameters.pe_ip_address }}
           **Interface:** ${{ parameters.interface }}
-          ${{ parameters.mtu_type ? '**MTU type:** ' + parameters.mtu_type : '' }}
-          ${{ parameters.mtu_value ? '**MTU value:** ' + parameters.mtu_value : '' }}
+          **MTU type:** ${{ parameters.mtu_type }}
+          **MTU value:** ${{ 100 if parameters.mtu_type == 'default' else 200 if parameters.mtu_type == 'jumbo' else parameters.mtu_value if parameters.mtu_type == 'other' else '' }}
           ${{ parameters.vpn_id ? '**VPN ID:** ' + parameters.vpn_id : '' }}
