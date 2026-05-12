@@ -17,13 +17,14 @@ spec:
   type: service
 
   parameters:
-    # ── Step 2: Base parameters (always shown) ─────────────────────────────────
+    # ── Step 1: Base parameters ────────────────────────────────────────────────
     - title: "Device & action details"
       required:
         - CCSD
         - device_id
         - action_type
         - interface
+
       properties:
         CCSD:
           title: "CCSD"
@@ -53,10 +54,12 @@ spec:
           type: string
           description: "Network interface name (e.g. GigabitEthernet0/1)"
 
-    # ── Step 3: VPN configuration ──────────────────────────────────────────────
+    # ── Step 2: VPN configuration ──────────────────────────────────────────────
     - title: "VPN configuration"
+
       required:
         - vpn_type
+
       properties:
         vpn_type:
           title: "VPN type"
@@ -77,7 +80,7 @@ spec:
         vpn_type:
           oneOf:
 
-            # ── vpn_type = n ───────────────────────────────────────────────────
+            # ── niprvrf ────────────────────────────────────────────────────────
             - properties:
                 vpn_type:
                   enum:
@@ -106,7 +109,7 @@ spec:
                 - protocol_type
                 - pe_ip_address
 
-            # ── vpn_type = p ───────────────────────────────────────────────────
+            # ── pisp ───────────────────────────────────────────────────────────
             - properties:
                 vpn_type:
                   enum:
@@ -153,24 +156,47 @@ spec:
               dependencies:
                 mtu_type:
                   oneOf:
+
+                    # default → mtu_value = 100
                     - properties:
                         mtu_type:
                           enum:
                             - default
+
+                        mtu_value:
+                          title: "MTU value"
+                          type: integer
+                          default: 100
+                          readOnly: true
+
+                    # jumbo → mtu_value = 200
+                    - properties:
+                        mtu_type:
+                          enum:
                             - jumbo
+
+                        mtu_value:
+                          title: "MTU value"
+                          type: integer
+                          default: 200
+                          readOnly: true
+
+                    # other → user input required
                     - properties:
                         mtu_type:
                           enum:
                             - other
+
                         mtu_value:
                           title: "MTU value"
                           type: integer
                           description: "Enter the MTU value"
                           minimum: 1
+
                       required:
                         - mtu_value
 
-            # ── vpn_type = c ───────────────────────────────────────────────────
+            # ── coi ────────────────────────────────────────────────────────────
             - properties:
                 vpn_type:
                   enum:
@@ -217,24 +243,47 @@ spec:
               dependencies:
                 mtu_type:
                   oneOf:
+
+                    # default → mtu_value = 100
                     - properties:
                         mtu_type:
                           enum:
                             - default
+
+                        mtu_value:
+                          title: "MTU value"
+                          type: integer
+                          default: 100
+                          readOnly: true
+
+                    # jumbo → mtu_value = 200
+                    - properties:
+                        mtu_type:
+                          enum:
                             - jumbo
+
+                        mtu_value:
+                          title: "MTU value"
+                          type: integer
+                          default: 200
+                          readOnly: true
+
+                    # other → user input required
                     - properties:
                         mtu_type:
                           enum:
                             - other
+
                         mtu_value:
                           title: "MTU value"
                           type: integer
                           description: "Enter the MTU value"
                           minimum: 1
+
                       required:
                         - mtu_value
 
-            # ── vpn_type = regular ─────────────────────────────────────────────
+            # ── regular ────────────────────────────────────────────────────────
             - properties:
                 vpn_type:
                   enum:
@@ -288,20 +337,43 @@ spec:
               dependencies:
                 mtu_type:
                   oneOf:
+
+                    # default → mtu_value = 100
                     - properties:
                         mtu_type:
                           enum:
                             - default
+
+                        mtu_value:
+                          title: "MTU value"
+                          type: integer
+                          default: 100
+                          readOnly: true
+
+                    # jumbo → mtu_value = 200
+                    - properties:
+                        mtu_type:
+                          enum:
                             - jumbo
+
+                        mtu_value:
+                          title: "MTU value"
+                          type: integer
+                          default: 200
+                          readOnly: true
+
+                    # other → user input required
                     - properties:
                         mtu_type:
                           enum:
                             - other
+
                         mtu_value:
                           title: "MTU value"
                           type: integer
                           description: "Enter the MTU value"
                           minimum: 1
+
                       required:
                         - mtu_value
 
@@ -309,12 +381,15 @@ spec:
     - id: launch-vpn-job
       name: Launch VPN playbook in AAP
       action: rhaap:launch-job-template
+
       input:
         token: ${{ secrets.aapToken }}
+
         values:
           template: AAP-SSP Demo Template
           jobType: run
           timeout: 300
+
           extraVariables:
             CCSD: ${{ parameters.CCSD }}
             device_id: ${{ parameters.device_id }}
@@ -324,7 +399,7 @@ spec:
             protocol_type: ${{ [parameters.protocol_type] if parameters.vpn_type == 'regular' else [] }}
             pe_ip_address: ${{ parameters.pe_ip_address }}
             mtu_type: ${{ parameters.mtu_type if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
-            mtu_value: ${{ parameters.mtu_value if parameters.vpn_type in ['pisp', 'coi', 'regular'] and parameters.mtu_type == 'other' else '' }}
+            mtu_value: ${{ parameters.mtu_value if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
             vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'regular' else '' }}
 
   output:
