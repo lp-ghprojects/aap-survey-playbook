@@ -65,9 +65,21 @@ spec:
 
         enable_as_override:
           title: Enable as-override
-          type: boolean
+          type: string
           description: Enable AS override
-          default: false
+          enum:
+            - "true"
+            - "false"
+          enumNames:
+            - Yes
+            - No
+          default: "false"
+
+
+          # title: Enable as-override
+          # type: boolean
+          # description: Enable AS override
+          # default: false
 
         vpn_type:
           title: VPN Type
@@ -437,7 +449,7 @@ spec:
             action_type: ${{ parameters.action_type }}
             enable_as_override: ${{ parameters.enable_as_override }}
             vpn_type: ${{ parameters.vpn_type }}
-            service_protocol: ${{ parameters.service_protocol }}
+            service_protocol: ${{ [parameters.service_protocol] }}
             mtu_type: ${{ parameters.mtu_type }}
             mtu_value: ${{ parameters.mtu_value }}
             vpn_id: ${{ parameters.vpn_id }}
@@ -453,8 +465,8 @@ spec:
     text:
       - title: VPN Request Summary
         content: |
-          **CCSD:** ${{ parameters.ccsd }}
-
+          **CCSD:** ${{ parameters.ccsd}}
+ 
           **PE Device ID:** ${{ parameters.pe_device_id }}
 
           **Action Type:** ${{ parameters.action_type }}
