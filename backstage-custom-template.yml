@@ -437,7 +437,7 @@ spec:
             action_type: ${{ parameters.action_type }}
             enable_as_override: ${{ parameters.enable_as_override }}
             vpn_type: ${{ parameters.vpn_type }}
-            service_protocol: ${{ parameters.service_protocol }}
+            service_protocol: ${{ [parameters.protocol_type] if parameters.vpn_type == 'regular' else [] }}
             mtu_type: ${{ parameters.mtu_type }}
             mtu_value: ${{ parameters.mtu_value }}
             vpn_id: ${{ parameters.vpn_id }}
