@@ -11,7 +11,7 @@
       action_type: "{{ action_type | default('not provided') }}"
       enable_as_override: "{{ enable_as_override | default(false) | bool }}"
       vpn_type: "{{ vpn_type | default('not provided') }}"
-      service_protocol: "{{ service_protocol | default('not provided') }}"
+      service_protocol: "{{ service_protocol | default([]) }}"
       mtu_type: "{{ mtu_type | default('not provided') }}"
       mtu_value: "{{ mtu_value | default('not provided') }}"
       vpn_id: "{{ vpn_id | default('not provided') }}"
