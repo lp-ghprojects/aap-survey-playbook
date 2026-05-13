@@ -3,10 +3,10 @@ kind: Template
 
 metadata:
   name: vpn-survey-dynamic
-  title: "L3VPN provisioning dynamic form"
+  title: L3VPN provisioning dynamic form
   description: >
-    Collects VPN parameters. Selecting a VPN type reveals the relevant
-    fields for that branch.
+    Collects VPN provisioning parameters and dynamically displays
+    VPN-specific fields with validation.
   tags:
     - ansible
     - vpn
@@ -17,29 +17,42 @@ spec:
   type: service
 
   parameters:
-    # ── Step 1: Base parameters ────────────────────────────────────────────────
-    - title: "Device & action details"
+
+    # ========================================================================
+    # Base Parameters
+    # ========================================================================
+    - title: Device and Request Details
+
       required:
-        - CCSD
-        - device_id
+        - ccsd
+        - pe_device_id
         - action_type
+        - enable_as_override
+        - vpn_type
+        - pe_ip_address
+        - pe_interface
+        - cisco_interface_type
         - interface
 
       properties:
-        CCSD:
-          title: "CCSD"
-          type: string
-          description: "Customer circuit service descriptor"
 
-        device_id:
-          title: "Device ID"
+        ccsd:
+          title: CCSD
           type: string
-          description: "Target device identifier"
+          description: Customer circuit service descriptor
+          minLength: 4
+          pattern: '^([a-np-zA-NP-Z]{1}[a-hj-np-zA-HJ-NP-Z0-9]{3})|([a-np-zA-NP-Z0-9]{1}[a-hj-np-zA-HJ-NP-Z]{1}[a-hj-np-zA-HJ-NP-Z0-9]{2})|([a-np-zA-NP-Z0-9]{1}[a-hj-np-zA-HJ-NP-Z0-9]{1}[a-hj-np-zA-HJ-NP-Z]{1}[a-hj-np-zA-HJ-NP-Z0-9]{1})|([a-np-zA-NP-Z0-9]{1}[a-hj-np-zA-HJ-NP-Z0-9]{2}[a-hj-np-zA-HJ-NP-Z]{1})$'
+
+        pe_device_id:
+          title: PE Device ID
+          type: string
+          description: Provider edge device identifier
+          pattern: '^[uU][jJ][eE][acepwACEPW][a-zA-Z]{3}(?:030|040|050|060|130|140|250|260?)$'
 
         action_type:
-          title: "Action type"
+          title: Action Type
           type: string
-          description: "Select the operation to perform"
+          description: Select the requested operation
           enum:
             - start
             - change
@@ -48,335 +61,363 @@ spec:
             - Start
             - Change
             - Discontinue
+          default: start
 
-        interface:
-          title: "Interface"
-          type: string
-          description: "Network interface name (e.g. GigabitEthernet0/1)"
+        enable_as_override:
+          title: Enable as-override
+          type: boolean
+          description: Enable AS override
+          default: false
 
-    # ── Step 2: VPN configuration ──────────────────────────────────────────────
-    - title: "VPN configuration"
-
-      required:
-        - vpn_type
-
-      properties:
         vpn_type:
-          title: "VPN type"
+          title: VPN Type
           type: string
-          description: "Select VPN type"
+          description: Select VPN type
           enum:
             - niprvrf
             - pisp
             - coi
             - regular
           enumNames:
-            - "Niprvrf"
-            - "Pisp"
-            - "Coi"
-            - "Regular"
+            - NIPRVRF
+            - PISP
+            - COI
+            - Regular
+
+        pe_ip_address:
+          title: PE IP Address
+          type: string
+          description: Provider edge IPv4 address
+          pattern: '^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+
+        pe_interface:
+          title: PE Interface
+          type: string
+          description: Provider edge interface name
+
+        cisco_interface_type:
+          title: Cisco Interface Type
+          type: string
+          description: Cisco interface family
+          enum:
+            - GigabitEthernet
+            - TenGigE
+            - HundredGigE
+
+        interface:
+          title: Interface
+          type: string
+          description: Interface format example 0/0/0 or 0/0/0.100
+          pattern: '^([0-9]+(/[0-9]+){2,4})(\.([1-9]|[1-9][0-9]|[1-9][0-9]{2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-3]))?$'
+
+    # ========================================================================
+    # VPN Specific Configuration
+    # ========================================================================
+    - title: VPN Configuration
+
+      required:
+        - vpn_type
+
+      properties:
+
+        vpn_type:
+          title: VPN Type
+          type: string
+          enum:
+            - niprvrf
+            - pisp
+            - coi
+            - regular
 
       dependencies:
+
         vpn_type:
           oneOf:
 
-            # ── niprvrf ────────────────────────────────────────────────────────
+            # ==================================================================
+            # NIPRVRF
+            # ==================================================================
             - properties:
+
                 vpn_type:
                   enum:
                     - niprvrf
 
-                protocol_type:
-                  title: "Service protocol"
+                service_protocol:
+                  title: Service Protocol
                   type: string
-                  description: "Select the service protocol"
                   enum:
                     - bgp
                     - static
                     - none
                   enumNames:
-                    - "BGP"
-                    - "Static"
-                    - "None"
+                    - BGP
+                    - Static
+                    - None
                   default: none
 
-                pe_ip_address:
-                  title: "PE IP address"
-                  type: string
-                  description: "Provider edge IP address"
-
               required:
-                - protocol_type
-                - pe_ip_address
+                - service_protocol
 
-            # ── pisp ───────────────────────────────────────────────────────────
+            # ==================================================================
+            # PISP
+            # ==================================================================
             - properties:
+
                 vpn_type:
                   enum:
                     - pisp
 
-                mtu_type:
-                  title: "MTU type"
+                service_protocol:
+                  title: Service Protocol
                   type: string
-                  description: "Select MTU type"
-                  enum:
-                    - default
-                    - jumbo
-                    - other
-                  enumNames:
-                    - "Default"
-                    - "Jumbo"
-                    - "Other"
-                  default: default
-
-                protocol_type:
-                  title: "Service protocol"
-                  type: string
-                  description: "Select the service protocol"
                   enum:
                     - bgp
                     - static
                     - none
                   enumNames:
-                    - "BGP"
-                    - "Static"
-                    - "None"
+                    - BGP
+                    - Static
+                    - None
                   default: none
 
-                pe_ip_address:
-                  title: "PE IP address"
+                mtu_type:
+                  title: MTU Type
                   type: string
-                  description: "Provider edge IP address"
+                  enum:
+                    - default
+                    - jumbo
+                    - other
+                  enumNames:
+                    - Default
+                    - Jumbo
+                    - Other
+                  default: default
 
               required:
+                - service_protocol
                 - mtu_type
-                - protocol_type
-                - pe_ip_address
 
               dependencies:
                 mtu_type:
                   oneOf:
 
-                    # default → mtu_value = 100
+                    # default => 1000
                     - properties:
                         mtu_type:
                           enum:
                             - default
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          default: 100
+                          default: 1000
                           readOnly: true
 
-                    # jumbo → mtu_value = 200
+                    # jumbo => 2000
                     - properties:
                         mtu_type:
                           enum:
                             - jumbo
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          default: 200
+                          default: 2000
                           readOnly: true
 
-                    # other → user input required
+                    # other => user input
                     - properties:
                         mtu_type:
                           enum:
                             - other
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          description: "Enter the MTU value"
-                          minimum: 1
+                          description: Enter custom MTU value
+                          minimum: 64
+                          maximum: 9000
 
                       required:
                         - mtu_value
 
-            # ── coi ────────────────────────────────────────────────────────────
+            # ==================================================================
+            # COI
+            # ==================================================================
             - properties:
+
                 vpn_type:
                   enum:
                     - coi
 
-                mtu_type:
-                  title: "MTU type"
+                service_protocol:
+                  title: Service Protocol
                   type: string
-                  description: "Select MTU type"
-                  enum:
-                    - default
-                    - jumbo
-                    - other
-                  enumNames:
-                    - "Default"
-                    - "Jumbo"
-                    - "Other"
-                  default: default
-
-                protocol_type:
-                  title: "Service protocol"
-                  type: string
-                  description: "Select the service protocol"
                   enum:
                     - bgp
                     - static
                     - none
                   enumNames:
-                    - "BGP"
-                    - "Static"
-                    - "None"
+                    - BGP
+                    - Static
+                    - None
                   default: none
 
-                pe_ip_address:
-                  title: "PE IP address"
+                mtu_type:
+                  title: MTU Type
                   type: string
-                  description: "Provider edge IP address"
+                  enum:
+                    - default
+                    - jumbo
+                    - other
+                  enumNames:
+                    - Default
+                    - Jumbo
+                    - Other
+                  default: default
 
               required:
+                - service_protocol
                 - mtu_type
-                - protocol_type
-                - pe_ip_address
 
               dependencies:
                 mtu_type:
                   oneOf:
 
-                    # default → mtu_value = 100
+                    # default => 1000
                     - properties:
                         mtu_type:
                           enum:
                             - default
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          default: 100
+                          default: 1000
                           readOnly: true
 
-                    # jumbo → mtu_value = 200
+                    # jumbo => 2000
                     - properties:
                         mtu_type:
                           enum:
                             - jumbo
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          default: 200
+                          default: 2000
                           readOnly: true
 
-                    # other → user input required
+                    # other => user input
                     - properties:
                         mtu_type:
                           enum:
                             - other
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          description: "Enter the MTU value"
-                          minimum: 1
+                          description: Enter custom MTU value
+                          minimum: 64
+                          maximum: 9000
 
                       required:
                         - mtu_value
 
-            # ── regular ────────────────────────────────────────────────────────
+            # ==================================================================
+            # REGULAR
+            # ==================================================================
             - properties:
+
                 vpn_type:
                   enum:
                     - regular
 
                 vpn_id:
-                  title: "VPN ID"
+                  title: VPN ID
                   type: string
-                  description: "Enter the VPN identifier"
+                  description: Enter VPN identifier
                   minLength: 1
 
-                mtu_type:
-                  title: "MTU type"
+                service_protocol:
+                  title: Service Protocol
                   type: string
-                  description: "Select MTU type"
-                  enum:
-                    - default
-                    - jumbo
-                    - other
-                  enumNames:
-                    - "Default"
-                    - "Jumbo"
-                    - "Other"
-                  default: default
-
-                protocol_type:
-                  title: "Service protocol"
-                  type: string
-                  description: "Select the service protocol"
                   enum:
                     - bgp
                     - static
                     - none
                   enumNames:
-                    - "BGP"
-                    - "Static"
-                    - "None"
+                    - BGP
+                    - Static
+                    - None
                   default: none
 
-                pe_ip_address:
-                  title: "PE IP address"
+                mtu_type:
+                  title: MTU Type
                   type: string
-                  description: "Provider edge IP address"
+                  enum:
+                    - default
+                    - jumbo
+                    - other
+                  enumNames:
+                    - Default
+                    - Jumbo
+                    - Other
+                  default: default
 
               required:
                 - vpn_id
+                - service_protocol
                 - mtu_type
-                - protocol_type
-                - pe_ip_address
 
               dependencies:
                 mtu_type:
                   oneOf:
 
-                    # default → mtu_value = 100
+                    # default => 1000
                     - properties:
                         mtu_type:
                           enum:
                             - default
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          default: 100
+                          default: 1000
                           readOnly: true
 
-                    # jumbo → mtu_value = 200
+                    # jumbo => 2000
                     - properties:
                         mtu_type:
                           enum:
                             - jumbo
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          default: 200
+                          default: 2000
                           readOnly: true
 
-                    # other → user input required
+                    # other => user input
                     - properties:
                         mtu_type:
                           enum:
                             - other
 
                         mtu_value:
-                          title: "MTU value"
+                          title: MTU Value
                           type: integer
-                          description: "Enter the MTU value"
-                          minimum: 1
+                          description: Enter custom MTU value
+                          minimum: 64
+                          maximum: 9000
 
                       required:
                         - mtu_value
 
+  # ==========================================================================
+  # AAP Launch Step
+  # ==========================================================================
   steps:
     - id: launch-vpn-job
       name: Launch VPN playbook in AAP
@@ -391,27 +432,49 @@ spec:
           timeout: 300
 
           extraVariables:
-            CCSD: ${{ parameters.CCSD }}
-            device_id: ${{ parameters.device_id }}
+            ccsd: ${{ parameters.ccsd }}
+            pe_device_id: ${{ parameters.pe_device_id }}
             action_type: ${{ parameters.action_type }}
-            interface: ${{ parameters.interface }}
+            enable_as_override: ${{ parameters.enable_as_override }}
             vpn_type: ${{ parameters.vpn_type }}
-            protocol_type: ${{ [parameters.protocol_type] if parameters.vpn_type == 'regular' else [] }}
+            service_protocol: ${{ parameters.service_protocol }}
+            mtu_type: ${{ parameters.mtu_type }}
+            mtu_value: ${{ parameters.mtu_value }}
+            vpn_id: ${{ parameters.vpn_id }}
             pe_ip_address: ${{ parameters.pe_ip_address }}
-            mtu_type: ${{ parameters.mtu_type if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
-            mtu_value: ${{ parameters.mtu_value if parameters.vpn_type in ['pisp', 'coi', 'regular'] else '' }}
-            vpn_id: ${{ parameters.vpn_id if parameters.vpn_type == 'regular' else '' }}
+            pe_interface: ${{ parameters.pe_interface }}
+            cisco_interface_type: ${{ parameters.cisco_interface_type }}
+            interface: ${{ parameters.interface }}
 
+  # ==========================================================================
+  # Output Summary
+  # ==========================================================================
   output:
     text:
-      - title: Submission summary
+      - title: VPN Request Summary
         content: |
-          **VPN type:** ${{ parameters.vpn_type }}
-          **Device:** ${{ parameters.device_id }}
-          **Action:** ${{ parameters.action_type }}
-          **Service protocol:** ${{ parameters.protocol_type }}
-          **PE IP:** ${{ parameters.pe_ip_address }}
+          **CCSD:** ${{ parameters.ccsd }}
+
+          **PE Device ID:** ${{ parameters.pe_device_id }}
+
+          **Action Type:** ${{ parameters.action_type }}
+
+          **Enable AS Override:** ${{ parameters.enable_as_override }}
+
+          **VPN Type:** ${{ parameters.vpn_type }}
+
+          **Service Protocol:** ${{ parameters.service_protocol }}
+
+          **MTU Type:** ${{ parameters.mtu_type }}
+
+          **MTU Value:** ${{ parameters.mtu_value }}
+
+          **VPN ID:** ${{ parameters.vpn_id }}
+
+          **PE IP Address:** ${{ parameters.pe_ip_address }}
+
+          **PE Interface:** ${{ parameters.pe_interface }}
+
+          **Cisco Interface Type:** ${{ parameters.cisco_interface_type }}
+
           **Interface:** ${{ parameters.interface }}
-          ${{ parameters.mtu_type ? '**MTU type:** ' + parameters.mtu_type : '' }}
-          ${{ parameters.mtu_value ? '**MTU value:** ' + parameters.mtu_value : '' }}
-          ${{ parameters.vpn_id ? '**VPN ID:** ' + parameters.vpn_id : '' }}
