@@ -5,48 +5,64 @@
   gather_facts: false
 
   vars:
-    CCSD: "{{ CCSD | default('not provided') }}"
-    device_id: "{{ device_id | default('not provided') }}"
-    action_type: "{{ action_type | default('not provided') }}"
-    vpn_type: "{{ vpn_type | default('not provided') }}"
-    interface: "{{ interface | default('not provided') }}"
-    protocol_type: "{{ protocol_type | default('not provided') }}"
-    vpn_id: "{{ vpn_id | default('not provided') }}"
+    survey_vars:
+      ccsd: "{{ ccsd | default('not provided') }}"
+      pe_device_id: "{{ pe_device_id | default('not provided') }}"
+      action_type: "{{ action_type | default('not provided') }}"
+      enable_as_override: "{{ enable_as_override | default(false) | bool }}"
+      vpn_type: "{{ vpn_type | default('not provided') }}"
+      service_protocol: "{{ service_protocol | default('not provided') }}"
+      mtu_type: "{{ mtu_type | default('not provided') }}"
+      mtu_value: "{{ mtu_value | default('not provided') }}"
+      vpn_id: "{{ vpn_id | default('not provided') }}"
+      pe_ip_address: "{{ pe_ip_address | default('not provided') }}"
+      pe_interface: "{{ pe_interface | default('not provided') }}"
+      cisco_interface_type: "{{ cisco_interface_type | default('not provided') }}"
+      interface: "{{ interface | default('not provided') }}"
 
   tasks:
-    - name: Print all collected survey variables
+    - name: Print all collected variables as YAML
       ansible.builtin.debug:
-        msg:
-          CCSD: "{{ CCSD }}"
-          device_id: "{{ device_id }}"
-          action_type: "{{ action_type }}"
-          vpn_type: "{{ vpn_type }}"
-          interface: "{{ interface }}"
-          protocol_type: "{{ protocol_type }}"
-          vpn_id: "{{ vpn_id }}"
+        msg: "{{ survey_vars | to_nice_yaml(indent=2) }}"
 
-    - name: Print variables one per line
+    - name: Print a readable request summary
       ansible.builtin.debug:
         msg: |
-          CCSD={{ CCSD }}
-          device_id={{ device_id }}
-          action_type={{ action_type }}
-          vpn_type={{ vpn_type }}
-          interface={{ interface }}
-          protocol_type={{ protocol_type }}
-          vpn_id={{ vpn_id }}
+          VPN Request Summary
+          ===================
+          CCSD               : {{ survey_vars.ccsd }}
+          PE device ID       : {{ survey_vars.pe_device_id }}
+          Action type         : {{ survey_vars.action_type }}
+          Enable as-override  : {{ survey_vars.enable_as_override }}
+          VPN type            : {{ survey_vars.vpn_type }}
+          Service protocol    : {{ survey_vars.service_protocol }}
+          MTU type            : {{ survey_vars.mtu_type }}
+          MTU value           : {{ survey_vars.mtu_value }}
+          VPN ID              : {{ survey_vars.vpn_id }}
+          PE IP address       : {{ survey_vars.pe_ip_address }}
+          PE interface        : {{ survey_vars.pe_interface }}
+          Cisco interface type: {{ survey_vars.cisco_interface_type }}
+          Interface           : {{ survey_vars.interface }}
 
-    - name: Show protocol_type for regular VPNs
+    - name: Show regular VPN fields
       ansible.builtin.debug:
-        msg: "Regular VPN selected — protocol_type is: {{ protocol_type }}"
-      when: vpn_type == "regular"
+        msg: |
+          Regular VPN selected
+          VPN ID           : {{ survey_vars.vpn_id }}
+          Service protocol : {{ survey_vars.service_protocol }}
+          MTU type         : {{ survey_vars.mtu_type }}
+          MTU value        : {{ survey_vars.mtu_value }}
+      when: survey_vars.vpn_type == "regular"
 
-    - name: Show vpn_id for special VPNs
+    - name: Show PISP or COI MTU fields
       ansible.builtin.debug:
-        msg: "Special VPN selected — vpn_id is: {{ vpn_id }}"
-      when: vpn_type == "special"
+        msg: |
+          {{ survey_vars.vpn_type | upper }} selected
+          MTU type  : {{ survey_vars.mtu_type }}
+          MTU value : {{ survey_vars.mtu_value }}
+      when: survey_vars.vpn_type in ["pisp", "coi"]
 
     - name: Warn if vpn_type is unrecognized
       ansible.builtin.debug:
-        msg: "WARNING: vpn_type '{{ vpn_type }}' is not regular or special."
-      when: vpn_type not in ['regular', 'special']
+        msg: "WARNING: vpn_type '{{ survey_vars.vpn_type }}' is not one of niprvrf, pisp, coi, regular."
+      when: survey_vars.vpn_type not in ["niprvrf", "pisp", "coi", "regular"]
